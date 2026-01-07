@@ -7,6 +7,8 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"gorm.io/datatypes"
+	"flowtrack-backend/utils"
 	"gorm.io/gorm"
 )
 
@@ -20,6 +22,7 @@ func CreateTask(c *gin.Context) {
 		Priority    string     `json:"priority"`
 		AssignedTo  string     `json:"assigned_to"`
 		DueDate     *time.Time `json:"due_date"`
+		Labels      datatypes.JSON `json:"labels"`
 	}
 
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -38,6 +41,7 @@ func CreateTask(c *gin.Context) {
 		Priority:    req.Priority,
 		AssignedTo:  req.AssignedTo,
 		DueDate:     req.DueDate,
+		Labels:      req.Labels,
 		Position:    int(count),
 	}
 
@@ -45,6 +49,13 @@ func CreateTask(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Could not create task"})
 		return
 	}
+	userID := c.GetUint("user_id")
+utils.LogAudit(
+	userID,
+	"CREATE_TASK",
+	"TASK",
+	task.ID,
+)
 
 	broadcast <- gin.H{
 		"type": "task_created",
@@ -85,6 +96,8 @@ func UpdateTask(c *gin.Context) {
 		Priority    string `json:"priority"`
 		AssignedTo  string `json:"assigned_to"`
 		DueDate     *time.Time `json:"due_date"`
+		Labels datatypes.JSON `json:"labels"`
+
 	}
 
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -99,10 +112,18 @@ func UpdateTask(c *gin.Context) {
 	task.Priority = req.Priority
 	task.AssignedTo = req.AssignedTo
 	task.DueDate = req.DueDate
+    task.Labels = req.Labels
 
 
 	config.DB.Save(&task)
-
+    userID := c.GetUint("user_id")
+    
+utils.LogAudit(
+    userID,
+    "UPDATE_TASK",
+    "TASK",
+    task.ID,
+)
 	// WebSocket Broadcast
 	broadcast <- gin.H{
 		"type": "task_updated",

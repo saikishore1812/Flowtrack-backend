@@ -26,6 +26,9 @@ func ConnectDatabase() {
     &models.ActivityLog{},
     &models.Comment{},
     &models.SubTask{},
+    &models.SavedFilter{},
+    &models.AuditLog{},
+    
 )
 
     DB = database

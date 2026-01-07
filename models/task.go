@@ -2,6 +2,7 @@ package models
 
 import (
     "gorm.io/gorm"
+    "gorm.io/datatypes"
     "time"
 )
 
@@ -15,5 +16,6 @@ type Task struct {
     Status    string `json:"status"`
     Priority  string `json:"priority"`
     AssignedTo string `json:"assigned_to"`
+    Labels datatypes.JSON `json:"labels"`
 
 }
